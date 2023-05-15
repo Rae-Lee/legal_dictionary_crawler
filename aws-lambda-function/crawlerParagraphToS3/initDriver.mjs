@@ -1,11 +1,11 @@
-const webdriver = require('selenium-webdriver')
-const chrome = require('selenium-webdriver/chrome')
+import webdriver from 'selenium-webdriver'
+import chrome from 'selenium-webdriver/chrome'
+import path from 'path'
+import fs from 'fs'
 
 const { Builder, Browser } = webdriver
-const path = require('path')
-const fs = require('fs')
 
-const initDrive = async () => {
+export const initDriver = async () => {
   try {
     if (!checkDriver()) { // 檢查Driver是否是設定，如果無法設定就結束程式
       return
@@ -39,4 +39,3 @@ const checkDriver = () => {
   }
   return true
 }
-module.exports = { initDrive }

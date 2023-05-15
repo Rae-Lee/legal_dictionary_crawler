@@ -1,8 +1,8 @@
-const con = require('connectMysql')
-const { getDate } = require('./getDate')
-const fetch = require('node-fetch')
-const cheerio = require('cheerio')
-const dns = require('dns')
+import { con } from './connectMysql.mjs'
+import { getDate } from './getDate.mjs'
+import fetch from 'node-fetch'
+import cheerio from 'cheerio'
+import dns from 'dns'
 // 爬取全國法規資料庫的最新訊息頁面
 const crawlerArticle = async (date) => {
   // 抓取所有更新頁面連結
@@ -93,7 +93,7 @@ const createCode = async (title) => {
   const indexEnd = title.includes('法') ? title.indexOf('法') + 1 : title.indexOf('條例') + 2
   const name = title.slice(indexStart, indexEnd)
   values.push(name)
-  con.query('INSERT INTO `codes` (`name`) VALUES (?)', values, (err, result) => {
+  con.query('INSERT INTO `Codes` (`name`) VALUES (?)', values, (err, result) => {
     if (err) throw err
     code = result[0]
   })
@@ -128,7 +128,7 @@ const addArticle = async ($, code) => {
     values.push(content)
     values.push(articleNo[i])
     values.push(code.id)
-    con.query('INSERT INTO `articles`(`content`, `article_no`,`code_id`) VALUES (?,?,?)', values, (err) => {
+    con.query('INSERT INTO `Articles`(`content`, `article_no`,`code_id`) VALUES (?,?,?)', values, (err) => {
       if (err) throw err
     })
   }
@@ -138,7 +138,7 @@ const deleteCode = async (title) => {
   const indexStart = title.indexOf('廢止') + 2
   const indexEnd = title.includes('法') ? title.indexOf('法') + 1 : title.indexOf('條例') + 2
   const name = title.slice(indexStart, indexEnd)
-  con.query('UPDATE`codes`SET `is_abandon`= true WHERE `name`= ?', [name], (err) => {
+  con.query('UPDATE`Codes`SET `is_abandon`= true WHERE `name`= ?', [name], (err) => {
     if (err) throw (err)
   })
 }
@@ -150,7 +150,7 @@ const correctCode = async ($, title) => {
   const indexEnd = title.includes('法') ? title.indexOf('法') + 1 : title.indexOf('條例') + 2
   const name = title.slice(0, indexEnd)
   let code = {}
-  con.query('SELECT * FROM`codes`WHERE`name` = ?', [name], (err, result) => {
+  con.query('SELECT * FROM`Codes`WHERE`name` = ?', [name], (err, result) => {
     if (err) throw err
     code = result[0]
   })
@@ -161,18 +161,18 @@ const correctCode = async ($, title) => {
     article.map(
       async (article) => {
         let articleFinded = {}
-        con.query('SELECT * FROM `articles`WHERE `article_no`= ? AND `code_id` = ?', [article.articleNo, article.codeId], (err, result) => {
+        con.query('SELECT * FROM `Articles`WHERE `article_no`= ? AND `code_id` = ?', [article.articleNo, article.codeId], (err, result) => {
           if (err) throw err
           articleFinded = result[0]
         })
         //  新增法條
         if (articleFinded === null) {
-          con.query('INSERT INTO `articles`(`content`, `article_no`,`code_id`) VALUES (?,?,?)', [article.content, article.articleNo, article.codeId], (err) => {
+          con.query('INSERT INTO `Articles`(`content`, `article_no`,`code_id`) VALUES (?,?,?)', [article.content, article.articleNo, article.codeId], (err) => {
             if (err) throw err
           })
-          // 修正法條
+          // 修正或刪除法條
         } else {
-          con.query('UPDATE `articles`SET `content` = ? WHERE `article_no`= ? AND `code_id` = ? ', [article.content, article.articleNo, article.codeId], (err) => {
+          con.query('UPDATE `Articles`SET `content` = ? WHERE `article_no`= ? AND `code_id` = ? ', [article.content, article.articleNo, article.codeId], (err) => {
             if (err) throw err
           })
         }
@@ -212,8 +212,7 @@ const processArticle = async ($, code, article) => {
     })
   }
 }
-
-exports.handler = async () => {
+export const handler = async () => {
   try {
     const date = await getDate()
     await crawlerArticle(date)

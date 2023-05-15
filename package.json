@@ -2,14 +2,17 @@
   "name": "law_memo_crawl",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1377.0",
     "cheerio": "^1.0.0-rc.12",
+    "fs": "^0.0.1-security",
     "mysql": "^2.18.1",
     "node-fetch": "^3.3.1",
     "selenium-webdriver": "^4.9.0"
