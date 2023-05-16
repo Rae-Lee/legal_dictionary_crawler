@@ -5,7 +5,7 @@ const s3 = new AWS.S3()
 export const handler = async (event) => {
   const object = event.Records[0].s3
   const params = {
-    Bucket: object.bucket.name,
+    Bucket: 'paragraph',
     Key: object.object.key
   }
   return await new Promise((resolve, reject) => {

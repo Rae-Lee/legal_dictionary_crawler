@@ -137,23 +137,27 @@ const getReferenceField = async (result) => {
   })
   return field
 }
-// 被引用的段落
+// 找出判決內容與引用段落重疊的部分(quote)
 const getReferenceQuote = async (paragraph, result) => {
-  let quote = paragraph.content
+  let quote = ''// 宣告重疊的部分
   if (result.content !== '裁判書因年代久遠，故無文字檔' && result.content !== '本件為依法不得公開或須去識別化後公開之案件') {
-    const endIndex = paragraph.content.lastIndexOf('（')// 被引用的段落結尾
-    const resultContent = result.content.replace(/[^\u4e00-\u9fa5]/g, '')
+    // 判決內容整理
+    const reference = result.content.replace(/[^\u4e00-\u9fa5]/g, '')
+    // 將段落依標點符號分成數段句子
     const paragraphSplits = paragraph.content.split(/[\uff08|\uff09|\u3008|\u3009|\u300a|\u300b|\u300c\u300d|\u300e|\u300f|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|	\u3001|\u3010|\u3011|\uff0c|\u3002|\uff1f|\uff01|\uff1a|\uff1b|\u201c|\u201d|\u2018|\u2019]/)
-    for (const paragraphSplit of paragraphSplits) {
-      // 查找被引用裁判書內容與引用段落相同之處
-      const htmlStartSliced = paragraphSplit.replace(/<abbr[^\u4e00-\u9fa5]+>/g, '')
-      const htmlEndSliced = htmlStartSliced.replaceAll('</abbr>', '')
-      if (resultContent.includes(htmlEndSliced)) {
-        const startIndex = paragraph.content.search(paragraphSplit)// 被引用的段落開頭
-        quote = paragraph.content.slice(startIndex, endIndex) + '。'
-        break
+    // 查找裁判書內容與引用段落相同之處
+    for (let paragraph of paragraphSplits) {
+      // 段落文字整理
+      paragraph = paragraph.replace(/<abbr[^\u4e00-\u9fa5]+>/g, '')
+      paragraph = paragraph.replaceAll('</abbr>', '')
+      // 若是有一致的句子則加入quote的變數中
+      if (reference.search(paragraph) !== -1) {
+        quote += paragraph
+        quote += '，'
       }
     }
+    const index = quote.length - 1
+    quote = quote.slice(0, index) + '。'
   }
   return quote
 }
@@ -165,7 +169,7 @@ const convertDataToJson = async (result) => {
 const getS3Data = (event) => {
   const object = event.Records[0].s3
   const params = {
-    Bucket: object.bucket.name,
+    Bucket: 'paragraph',
     Key: object.object.key
   }
   return new Promise((resolve, reject) => {

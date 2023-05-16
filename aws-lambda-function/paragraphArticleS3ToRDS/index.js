@@ -5,7 +5,7 @@ const s3 = new AWS.S3()
 export const handler = async (event) => {
   const object = event.Records[0].s3
   const params = {
-    Bucket: 'reference',
+    Bucket: 'paragraphArticle',
     Key: object.object.key
   }
   return await new Promise((resolve, reject) => {
@@ -14,7 +14,7 @@ export const handler = async (event) => {
       else {
         const contents = result.Body.data
         for (const content of contents) {
-          con.query('INSERT INTO `References`(`name`,    `content`, `quote`, `field_id`) VALUES (?,?,?,?)', [content.name, content.content, content.quote, content.field_id], (err) => {
+          con.query('INSERT INTO `Paragraph_articles`(`article_id`, `paragraph_id`) VALUES (?,?)', [content.article_id, content.paragraph_id], (err) => {
             if (err) console.log(err)
           })
         }
