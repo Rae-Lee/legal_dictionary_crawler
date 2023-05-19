@@ -99,7 +99,7 @@ const getReference = async (judType, referenceName) => {
       }
       driver.quit()
       result.name = referenceName
-      result.content = contentSliced
+      result.content = contentSliced.toString()
     }
   }
   return result
@@ -142,22 +142,27 @@ const getReferenceQuote = async (paragraph, result) => {
   let quote = ''// 宣告重疊的部分
   if (result.content !== '裁判書因年代久遠，故無文字檔' && result.content !== '本件為依法不得公開或須去識別化後公開之案件') {
     // 判決內容整理
-    const reference = result.content.replace(/[^\u4e00-\u9fa5]/g, '')
+    let reference
+    reference = result.content.replace(/<abbr[^\u4e00-\u9fa5]+>/g, '')
+    reference = reference.replaceAll('</abbr>', '')
+    reference = reference.replace(/\s/g, '')
+    // 段落文字整理
+    let paragraphs
+    paragraphs = paragraph.content.replace(/<abbr[^\u4e00-\u9fa5]+>/g, '')
+    paragraphs = paragraphs.replaceAll('</abbr>', '')
     // 將段落依標點符號分成數段句子
-    const paragraphSplits = paragraph.content.split(/[\uff08|\uff09|\u3008|\u3009|\u300a|\u300b|\u300c\u300d|\u300e|\u300f|\ufe43|\ufe44|\u3014|\u3015|\u2026|\u2014|\uff5e|\ufe4f|	\u3001|\u3010|\u3011|\uff0c|\u3002|\uff1f|\uff01|\uff1a|\uff1b|\u201c|\u201d|\u2018|\u2019]/)
+    const paragraphSplits = paragraphs.split(/[\u3002|\uff0c|\uff08|\uff09]/)
     // 查找裁判書內容與引用段落相同之處
-    for (let paragraph of paragraphSplits) {
-      // 段落文字整理
-      paragraph = paragraph.replace(/<abbr[^\u4e00-\u9fa5]+>/g, '')
-      paragraph = paragraph.replaceAll('</abbr>', '')
-      // 若是有一致的句子則加入quote的變數中
-      if (reference.search(paragraph) !== -1) {
-        quote += paragraph
-        quote += '，'
+    for (const paragraph of paragraphSplits) {
+      // 若是有一致的句子則將那段落加入quote的變數中
+      const index = reference.indexOf(paragraph)
+      if (index !== -1) {
+        const start = reference.lastIndexOf('。', index) + 1
+        const end = reference.indexOf('。', index) + 1
+        quote = reference.slice(start, end)
+        break
       }
     }
-    const index = quote.length - 1
-    quote = quote.slice(0, index) + '。'
   }
   return quote
 }
